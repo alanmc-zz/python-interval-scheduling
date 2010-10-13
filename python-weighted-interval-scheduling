@@ -1,0 +1,62 @@
+#!/usr/bin/python
+
+import collections 
+import bisect
+
+"""
+This algorithm returns the weight of the maximally weighted set of independent intervals
+in an interval graph.  Commonly used for scheduling optimization problems.
+
+The algorithm works as follows:
+
+    Imagine this scenario:  You;ve travelling to SV to raise money for you fledging startup,
+    and need to schedule investor meetings during your stay to maximize the money you will potentially raise.
+    Every potential investor meeting you can take has a start and end time, and you can only be at
+    one meeting at a time.  In addition to start and end times, each meeting has value associated with it
+    that corresponds to the expected value of money you will raise by taking the meeting.  
+
+    Here's a trivial case (notice that the weight of the interval is independent of its length.):
+
+
+      *----- 500K -----*    *--- 600K ---*       *-------- 100K --------*
+    12pm              1pm  2pm         2:30pm   4pm                    8pm
+
+
+    In this trival case, the maximall weighting is simply the sum of all weights, since all intervals are independent
+    and can be scheduled together.
+
+    In non-trivial cases, the intervals will overlap and tough decisions need to be made.
+      
+The algorithm's runtime is O(n log n) in the worst case
+"""
+
+def weighted_interval_scheduling(G):
+    '''
+    Input a graph G, whose structure is a list of tuples, where each tuple represents
+    a weight interval with structure (<start>, <end>, <weight>), where all components are
+    less-than comparable types
+
+    --- Doctest ---
+
+    >>> G = [(43,70,27),(3,18,24),(65,99,45),(20,39,26),(45,74,26),(10,28,20),(78,97,23),(0,9,22)]
+    >>> weighted_interval_scheduling(G)
+    100
+    '''
+
+    S = collections.defaultdict(int)
+    G.sort(lambda x,y: x[1]-y[1])
+
+    start = [x[0] for x in G]  
+    end = [x[1] for x in G]
+
+    S[0] = 0
+    S[1] = G[0][2]
+
+    for i in xrange(2, len(G)+1):
+        S[i] = max(S[i-1], G[i-1][2] + S[ bisect.bisect_left(end, start[i-1]) ])
+
+    return S[len(G)]
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
